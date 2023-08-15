@@ -92,7 +92,3 @@ Contributions are welcome! If you find any issues or have suggestions for improv
 ## License
 
 This project is licensed under the [MIT License](LICENSE).
-
----
-
-Feel free to expand upon this outline and add more detailed information to each section. You can use Markdown formatting to create headings, lists, code blocks, and links for a well-structured and informative documentation for your Flask CRUD app project.
