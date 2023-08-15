@@ -1,5 +1,5 @@
 from flask import request, jsonify
-from app import app
+from app.app import app
 from app.models import Book
 
 @app.route('/books', methods=['GET', 'POST'])
