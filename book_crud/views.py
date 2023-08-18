@@ -1,26 +1,34 @@
 from flask import request, jsonify
-from app.app import app
-from app.models import Book
+from flask_restx import Namespace, fields, Resource
+from mongoengine.errors import DoesNotExist, ValidationError
+from book_crud.models import Book
 
-@app.route('/books', methods=['GET', 'POST'])
-def handle_books():
-    if request.method == 'GET':
-        books = Book.objects.all()
-        return jsonify([{"id": str(book.id), "title": book.title, "author": book.author} for book in books])
-    elif request.method == 'POST':
-        data = request.get_json()
-        book = Book(**data).save()
-        return jsonify({"id": str(book.id), "title": book.title, "author": book.author}), 201
+api = Namespace('books', description='Book operation')
 
-@app.route('/books/<book_id>', methods=['GET', 'PUT', 'DELETE'])
-def handle_book(book_id):
-    book = Book.objects.get_or_404(id=book_id)
-    if request.method == 'GET':
-        return jsonify({"id": str(book.id), "title": book.title, "author": book.author})
-    elif request.method == 'PUT':
-        data = request.get_json()
-        book.update(**data)
-        return jsonify({"id": str(book.id), "title": book.title, "author": book.author})
-    elif request.method == 'DELETE':
-        book.delete()
-        return '', 204
+book_model = api.model('Book', {
+    'id': fields.String(required=True, description='Book ID'),
+    'title': fields.String(required=True, description='Book title'),
+    'author': fields.String(required=True, description='Book author')
+})
+
+@api.route('/books')
+class BookList(Resource):
+    @api.marshal_list_with(book_model)
+    def get(self):
+        try:
+            books = Book.objects.all()
+            return books
+        except Exception as e:
+            api.abort(500, message='Internal server error')
+            
+    @api.expect(book_model)
+    @api.marshal_with(book_model, code=201)
+    def post(self):
+        try:
+            data = api.payload
+            book = Book(**data).save()
+            return book, 201
+        except ValidationError as ve:
+            api.abort(400, message=ve.message)
+        except Exception as e:
+            api.abort(500, message='Internal server error')
