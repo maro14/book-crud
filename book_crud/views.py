@@ -32,3 +32,43 @@ class BookList(Resource):
             api.abort(400, message=ve.message)
         except Exception as e:
             api.abort(500, message='Internal server error')
+            
+            
+@api.route('/books/<book_id>')
+@api.response(404, "Book not found")
+class BookDetail(Resource):
+    @api.marshal_with(book_model)
+    def get(self, book_id):
+        try:
+            book = Book.objects.get(id=book_id)
+            return book
+        except DoesNotExist:
+            api.abort(404, message='Book not found')
+        except Exception as e: 
+            api.abort(500, message='Internal server error')
+            
+    @api.expect(book_model)
+    @api.marshal_with(book_model)
+    def put(self, book_id):
+        try:
+            data = api.payload
+            book = Book.objects.get(id=book_id)
+            book.update(**data)
+            return book
+        except DoesNotExist:
+            api.abort(404, message='Book not found')
+        except ValidationError as ve:
+            api.abort(400, message=ve.message)
+        except Exception as e:
+            api.abort(500, message='Internal server error')
+    
+    @api.response(204, "BOok deleted")
+    def delete(self, book_id):
+        try:
+            book = Book.objects.get(id=book_id)
+            book.delete()
+            return '', 204
+        except DoesNotExist:
+            api.abort(404, message='Book not found')
+        except Exception as e:
+            api.abort(500, message='Internal server error')
